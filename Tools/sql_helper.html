@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MySQL Cheatsheet</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .container {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    h1 {
+      text-align: center;
+    }
+    .tabs {
+      display: flex;
+      background-color: lightgray;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    .tab {
+      padding: 10px;
+      cursor: pointer;
+      flex: 1;
+      text-align: center;
+      background-color: #e0e0e0;
+      border-right: 1px solid #c0c0c0;
+    }
+    .tab:last-child {
+      border-right: none;
+    }
+    .tab.active {
+      background-color: white;
+      border-bottom: 2px solid #4CAF50;
+    }
+    .tab-content {
+      display: none;
+      padding: 20px;
+      background-color: #f9f9f9;
+      border: 1px solid #ccc;
+      border-top: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .form-group {
+      margin-bottom: 10px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-right: 5px;
+      margin-bottom: 10px;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .data-type-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    .data-type-buttons button {
+      padding: 5px 10px;
+      font-size: 12px;
+    }
+    pre {
+      background-color: black;
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+      position: relative;
+      white-space: pre-wrap;
+    }
+    .copy-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: transparent;
+      border: none;
+      cursor: pointer;
+    }
+    .copy-btn img {
+      width: 20px;
+      height: 20px;
+    }
+    .columns-input {
+      margin-bottom: 20px;
+    }
+    textarea#columns {
+      height: 100px;
+    }
+    .checkbox-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .checkbox-group label {
+      display: flex;
+      align-items: center;
+    }
+    .checkbox-group input {
+      margin-right: 5px;
+    }
+    .tooltip {
+      position: absolute;
+      background-color: #333;
+      color: #fff;
+      padding: 5px;
+      border-radius: 5px;
+      font-size: 12px;
+      display: none;
+      white-space: nowrap;
+      z-index: 10;
+    }
+    .tooltip.visible {
+      display: block;
+    }
+  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+</head>
+<body>
+  <div class="container">
+    <h1>MySQL Command Cheatsheet</h1>
+
+    <!-- Tab Section -->
+    <div class="tabs">
+      <div class="tab active" onclick="showTab('database')" data-tooltip="Click to view database commands">Database</div>
+      <div class="tab" onclick="showTab('table')" data-tooltip="Click to view table commands">Table</div>
+      <div class="tab" onclick="showTab('search')" data-tooltip="Click to view search commands">Search</div>
+      <div class="tab" onclick="showTab('data')" data-tooltip="Click to view data commands">Data</div>
+    </div>
+
+    <!-- Tab Content for Database -->
+    <div id="database" class="tab-content active">
+      <div class="form-group">
+        <label for="dbName">Database Name</label>
+        <input type="text" id="dbName" placeholder="Enter database name" data-tooltip="Enter the name of the database you want to create or drop">
+      </div>
+      <button onclick="generateCreateDatabase()" data-tooltip="Create a new database">Create Database</button>
+      <button onclick="generateDropDatabase()" data-tooltip="Delete an existing database">Drop Database</button>
+    </div>
+
+    <!-- Tab Content for Table -->
+    <div id="table" class="tab-content">
+      <div class="form-group">
+        <label for="tableName">Table Name</label>
+        <input type="text" id="tableName" placeholder="Enter table name" data-tooltip="Enter the name of the table you want to create or modify">
+      </div>
+
+      <div class="form-group">
+        <label>Column Attributes</label>
+        <div class="checkbox-group">
+          <label><input type="checkbox" id="primaryKey"> Primary Key</label>
+          <label><input type="checkbox" id="autoIncrement"> Auto Increment</label>
+          <label><input type="checkbox" id="unique"> UNIQUE</label>
+          <label><input type="checkbox" id="default"> DEFAULT</label>
+          <label><input type="checkbox" id="notNull"> NOT NULL</label>
+          <label><input type="checkbox" id="unsigned"> UNSIGNED</label>
+        </div>
+      </div>
+
+      <div class="columns-input">
+        <label>Enter Columns (name:type, comma separated)</label>
+        <textarea id="columns" placeholder="e.g., id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(100), created_at TIMESTAMP" data-tooltip="Enter column names and their types here, e.g., id INT PRIMARY KEY"></textarea>
+        <div class="data-type-buttons">
+          <button onclick="addColumn('VARCHAR')" data-tooltip="Add a VARCHAR column">VARCHAR</button>
+          <button onclick="addColumn('CHAR')" data-tooltip="Add a CHAR column">CHAR</button>
+          <button onclick="addColumn('TEXT')" data-tooltip="Add a TEXT column">TEXT</button>
+          <button onclick="addColumn('INT')" data-tooltip="Add an INT column">INT</button>
+          <button onclick="addColumn('SMALLINT')" data-tooltip="Add a SMALLINT column">SMALLINT</button>
+          <button onclick="addColumn('TINYINT')" data-tooltip="Add a TINYINT column">TINYINT</button>
+          <button onclick="addColumn('MEDIUMINT')" data-tooltip="Add a MEDIUMINT column">MEDIUMINT</button>
+          <button onclick="addColumn('BIGINT')" data-tooltip="Add a BIGINT column">BIGINT</button>
+          <button onclick="addColumn('DATE')" data-tooltip="Add a DATE column">DATE</button>
+          <button onclick="addColumn('TIME')" data-tooltip="Add a TIME column">TIME</button>
+          <button onclick="addColumn('TIMESTAMP')" data-tooltip="Add a TIMESTAMP column">TIMESTAMP</button>
+          <button onclick="addColumn('ENUM')" data-tooltip="Add an ENUM column">ENUM</button>
+          <button onclick="addColumn('FLOAT')" data-tooltip="Add a FLOAT column">FLOAT</button>
+          <button onclick="addColumn('DOUBLE')" data-tooltip="Add a DOUBLE column">DOUBLE</button>
+          <button onclick="addColumn('DECIMAL')" data-tooltip="Add a DECIMAL column">DECIMAL</button>
+        </div>
+      </div>
+
+      <button onclick="generateCreateTable()" data-tooltip="Create a new table with the specified columns">Create Table</button>
+      <button onclick="generateAddColumn()" data-tooltip="Add a new column to the existing table">Add Column</button>
+      <button onclick="generateDeleteTable()" data-tooltip="Delete an existing table">Delete Table</button>
+      <button onclick="generateAlterTable()" data-tooltip="Rename an existing table">Alter Table (Rename)</button>
+      <button onclick="generateForeignKey()" data-tooltip="Add a foreign key constraint to the table">Add Foreign Key</button>
+    </div>
+
+    <!-- Tab Content for Search -->
+    <div id="search" class="tab-content">
+      <div class="form-group">
+        <label for="tableNameSearch">Table Name</label>
+        <input type="text" id="tableNameSearch" placeholder="Enter table name" data-tooltip="Enter the name of the table to search">
+      </div>
+      <button onclick="generateSelectQuery()" data-tooltip="Select all records from the specified table">Select All Records</button>
+      <button onclick="generateWhereQuery()" data-tooltip="Select records from the table with a specified condition">Select with WHERE Condition</button>
+      <button onclick="generateLikeQuery()" data-tooltip="Select records from the table where a column matches a pattern">Select with LIKE</button>
+      <button onclick="generateNotLikeQuery()" data-tooltip="Select records from the table where a column does not match a pattern">Select with NOT LIKE</button>
+      <button onclick="generateJoinQuery()" data-tooltip="Select records from two tables with a JOIN">Select with JOIN</button>
+    </div>
+
+    <!-- Tab Content for Data -->
+    <div id="data" class="tab-content">
+      <div class="form-group">
+        <label for="tableNameData">Table Name</label>
+        <input type="text" id="tableNameData" placeholder="Enter table name" data-tooltip="Enter the name of the table to modify data">
+      </div>
+      <button onclick="generateInsertQuery()" data-tooltip="Insert new data into the specified table">Insert Data</button>
+      <button onclick="generateUpdateQuery()" data-tooltip="Update existing data in the specified table">Update Data</button>
+      <button onclick="generateDeleteQuery()" data-tooltip="Delete data from the specified table">Delete Data</button>
+    </div>
+
+    <!-- Output Section -->
+    <div class="form-group">
+      <label for="outputBox">Output</label>
+      <pre id="outputBox">
+        <button class="copy-btn" onclick="copyToClipboard()" data-tooltip="Copy the SQL command to clipboard">
+           <i class="fas fa-copy"></i>
+        </button>
+
+      </pre>
+    </div>
+  </div>
+
+  <script>
+    function showTab(tabId) {
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+      });
+      document.querySelector(`.tab[data-tooltip="Click to view ${tabId} commands"]`).classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+    }
+
+    function generateCreateDatabase() {
+      const dbName = document.getElementById('dbName').value;
+      const sql = `CREATE DATABASE ${dbName};`;
+      displayOutput(sql);
+    }
+
+    function generateDropDatabase() {
+      const dbName = document.getElementById('dbName').value;
+      const sql = `DROP DATABASE ${dbName};`;
+      displayOutput(sql);
+    }
+
+    function generateCreateTable() {
+      const tableName = document.getElementById('tableName').value;
+      const columns = document.getElementById('columns').value;
+      const sql = `CREATE TABLE ${tableName} (\n${columns}\n);`;
+      displayOutput(sql);
+    }
+
+    function generateAddColumn() {
+      const tableName = document.getElementById('tableName').value;
+      const columnName = prompt("Enter column name:");
+      const columnType = document.getElementById('columns').value;
+      const sql = `ALTER TABLE ${tableName} ADD ${columnName} ${columnType};`;
+      displayOutput(sql);
+    }
+
+    function generateDeleteTable() {
+      const tableName = document.getElementById('tableName').value;
+      const sql = `DROP TABLE ${tableName};`;
+      displayOutput(sql);
+    }
+
+    function generateAlterTable() {
+      const oldTableName = prompt("Enter current table name:");
+      const newTableName = prompt("Enter new table name:");
+      const sql = `ALTER TABLE ${oldTableName} RENAME TO ${newTableName};`;
+      displayOutput(sql);
+    }
+
+    function generateForeignKey() {
+      const tableName = document.getElementById('tableName').value;
+      const columnName = prompt("Enter column name:");
+      const refTable = prompt("Enter reference table name:");
+      const refColumn = prompt("Enter reference column name:");
+      const sql = `ALTER TABLE ${tableName} ADD CONSTRAINT fk_${columnName} FOREIGN KEY (${columnName}) REFERENCES ${refTable}(${refColumn});`;
+      displayOutput(sql);
+    }
+
+    function generateSelectQuery() {
+      const tableName = document.getElementById('tableNameSearch').value;
+      const sql = `SELECT * FROM ${tableName};`;
+      displayOutput(sql);
+    }
+
+    function generateWhereQuery() {
+      const tableName = document.getElementById('tableNameSearch').value;
+      const condition = prompt("Enter WHERE condition:");
+      const sql = `SELECT * FROM ${tableName} WHERE ${condition};`;
+      displayOutput(sql);
+    }
+
+    function generateLikeQuery() {
+      const tableName = document.getElementById('tableNameSearch').value;
+      const column = prompt("Enter column name:");
+      const value = prompt("Enter search value:");
+      const sql = `SELECT * FROM ${tableName} WHERE ${column} LIKE '${value}';`;
+      displayOutput(sql);
+    }
+
+    function generateNotLikeQuery() {
+      const tableName = document.getElementById('tableNameSearch').value;
+      const column = prompt("Enter column name:");
+      const value = prompt("Enter search value:");
+      const sql = `SELECT * FROM ${tableName} WHERE ${column} NOT LIKE '${value}';`;
+      displayOutput(sql);
+    }
+
+    function generateJoinQuery() {
+      const table1 = prompt("Enter first table name:");
+      const table2 = prompt("Enter second table name:");
+      const column1 = prompt("Enter column name for join in first table:");
+      const column2 = prompt("Enter column name for join in second table:");
+      const sql = `SELECT * FROM ${table1} JOIN ${table2} ON ${table1}.${column1} = ${table2}.${column2};`;
+      displayOutput(sql);
+    }
+
+    function generateInsertQuery() {
+      const tableName = document.getElementById('tableNameData').value;
+      const values = prompt("Enter values (comma separated):");
+      const sql = `INSERT INTO ${tableName} VALUES (${values});`;
+      displayOutput(sql);
+    }
+
+    function generateUpdateQuery() {
+      const tableName = document.getElementById('tableNameData').value;
+      const setValues = prompt("Enter SET clause (e.g., column1='value1', column2='value2'):");
+      const condition = prompt("Enter WHERE condition:");
+      const sql = `UPDATE ${tableName} SET ${setValues} WHERE ${condition};`;
+      displayOutput(sql);
+    }
+
+    function generateDeleteQuery() {
+      const tableName = document.getElementById('tableNameData').value;
+      const condition = prompt("Enter WHERE condition:");
+      const sql = `DELETE FROM ${tableName} WHERE ${condition};`;
+      displayOutput(sql);
+    }
+
+    function addColumn(dataType) {
+      let columnName = prompt("Enter column name:");
+      let columnType;
+
+      // Collect attributes
+      let isPrimaryKey = document.getElementById('primaryKey').checked;
+      let isAutoIncrement = document.getElementById('autoIncrement').checked;
+      let isUnique = document.getElementById('unique').checked;
+      let isDefault = document.getElementById('default').checked;
+      let isNotNull = document.getElementById('notNull').checked;
+      let isUnsigned = document.getElementById('unsigned').checked;
+
+      // Add more attributes if needed
+
+      switch (dataType) {
+        case 'ENUM':
+          let enumValues = [];
+          while (true) {
+            let value = prompt("Enter ENUM value (or press Cancel to finish):");
+            if (value === null) break;
+            enumValues.push(value);
+          }
+          columnType = `ENUM('${enumValues.join("','")}')`;
+          break;
+        case 'VARCHAR':
+        case 'CHAR':
+        case 'TEXT':
+          let length = prompt(`Enter length for ${dataType} (e.g., 255):`, 10);
+          columnType = `${dataType}(${length})`;
+          break;
+        case 'INT':
+        case 'SMALLINT':
+        case 'TINYINT':
+        case 'MEDIUMINT':
+        case 'BIGINT':
+          columnType = dataType;
+          break;
+        case 'FLOAT':
+        case 'DOUBLE':
+        case 'DECIMAL':
+          let precision = prompt(`Enter precision for ${dataType} (e.g., 10,2):`);
+          columnType = `${dataType}(${precision})`;
+          break;
+        default:
+          columnType = dataType;
+      }
+
+      // Apply attributes
+      let attributes = [];
+      if (isPrimaryKey) attributes.push("PRIMARY KEY");
+      if (isAutoIncrement) attributes.push("AUTO_INCREMENT");
+      if (isUnique) attributes.push("UNIQUE");
+      if (isDefault) {
+        let defaultValue = prompt("Enter default value:");
+        attributes.push(`DEFAULT '${defaultValue}'`);
+      }
+      if (isNotNull) attributes.push("NOT NULL");
+      if (isUnsigned) attributes.push("UNSIGNED");
+      // Add more attributes if needed
+
+      let columnDefinition = `${columnName} ${columnType} ${attributes.join(' ')}`;
+      let columnsBox = document.getElementById('columns');
+      columnsBox.value += (columnsBox.value ? ',\n' : '') + columnDefinition;
+
+      // Clear checkboxes
+      document.getElementById('primaryKey').checked = false;
+      document.getElementById('autoIncrement').checked = false;
+      document.getElementById('unique').checked = false;
+      document.getElementById('default').checked = false;
+      document.getElementById('notNull').checked = false;
+      document.getElementById('unsigned').checked = false;
+      // Clear more checkboxes if needed
+    }
+
+    function displayOutput(sql) {
+      document.getElementById('outputBox').innerText = sql;
+    }
+
+    function copyToClipboard() {
+      const output = document.getElementById('outputBox').innerText;
+      navigator.clipboard.writeText(output).then(() => {
+        alert('SQL command copied to clipboard');
+      }, (err) => {
+        console.error('Failed to copy text: ', err);
+      });
+    }
+
+    // Initialize tooltips
+    document.querySelectorAll('[data-tooltip]').forEach(element => {
+      element.addEventListener('mouseover', (event) => {
+        const tooltip = document.createElement('div');
+        tooltip.className = 'tooltip visible';
+        tooltip.innerText = event.target.getAttribute('data-tooltip');
+        document.body.appendChild(tooltip);
+
+        const rect = event.target.getBoundingClientRect();
+        tooltip.style.left = `${rect.left + window.scrollX}px`;
+        tooltip.style.top = `${rect.top + window.scrollY - tooltip.offsetHeight - 5}px`;
+      });
+
+      element.addEventListener('mouseout', () => {
+        document.querySelectorAll('.tooltip').forEach(tooltip => {
+          tooltip.classList.remove('visible');
+          document.body.removeChild(tooltip);
+        });
+      });
+    });
+  </script>
+</body>
+</html>
